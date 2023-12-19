@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Bicard.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class identity : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

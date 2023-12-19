@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bicard.Controllers
 {
+    [Authorize(Roles = "Patient")]
     [ApiController]
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase

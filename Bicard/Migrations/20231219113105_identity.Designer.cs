@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Bicard.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20231208054359_init")]
-    partial class init
+    [Migration("20231219113105_identity")]
+    partial class identity
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

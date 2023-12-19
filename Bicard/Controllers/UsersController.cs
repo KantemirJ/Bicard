@@ -2,18 +2,22 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Bicard.Models;
+using Bicard.Entities;
+using Bicard.Services;
 
 [ApiController]
 [Route("api/[controller]")]
-public class IdentityUsersController : ControllerBase
+public class UsersController : ControllerBase
 {
     private readonly UserManager<IdentityUser> _userManager;
     private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly IJwtService _jwtService;
 
-    public IdentityUsersController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+    public UsersController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IJwtService jwtService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _jwtService = jwtService;
     }
 
     [HttpPost("register")]
@@ -25,6 +29,7 @@ public class IdentityUsersController : ControllerBase
         if (result.Succeeded)
         {
             // You may customize the response based on your needs
+            await _userManager.AddToRoleAsync(user, "Patient");
             return Ok(new { Message = "User registered successfully" });
         }
 
@@ -39,9 +44,15 @@ public class IdentityUsersController : ControllerBase
         if (result.Succeeded)
         {
             // You may customize the response based on your needs
-            return Ok(new { Message = "Login successful" });
+            var user = await _userManager.FindByNameAsync(model.UserName);
+            var accessToken = _jwtService.GenerateAccessToken(user);
+            return Ok(new { 
+                Message = "Login successful",
+                AccessToken = accessToken.Result,
+            });
         }
 
         return Unauthorized(new { Message = "Invalid login attempt" });
     }
+
 }
