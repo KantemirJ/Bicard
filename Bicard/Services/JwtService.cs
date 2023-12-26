@@ -11,14 +11,14 @@ namespace Bicard.Services
     public class JwtService : IJwtService
     {
         private readonly IConfiguration _configuration;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<User> _userManager;
 
-        public JwtService(IConfiguration configuration, UserManager<IdentityUser> userManager)
+        public JwtService(IConfiguration configuration, UserManager<User> userManager)
         {
             _configuration = configuration;
             _userManager = userManager;
         }
-        public async Task<string> GenerateAccessToken(IdentityUser user)
+        public async Task<string> GenerateAccessToken(User user)
         {
             // Get JWT configuration values from appsettings.json
             string key = _configuration["Jwt:Key"];
@@ -27,11 +27,11 @@ namespace Bicard.Services
 
             // Retrieve additional claims from the IdentityUser
             var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id),
-            new Claim(ClaimTypes.Name, user.UserName),
-            // Include additional claims as needed
-        };
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.UserName),
+                // Include additional claims as needed
+            };
 
             // Retrieve the roles of the user
             var roles = await _userManager.GetRolesAsync(user);

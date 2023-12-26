@@ -9,10 +9,10 @@ namespace Bicard.Controllers
     [ApiController]
     public class RolesController : ControllerBase
     {
-        private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly RoleManager<Role> _roleManager;
+        private readonly UserManager<User> _userManager;
 
-        public RolesController(RoleManager<IdentityRole> roleManager, UserManager<IdentityUser> userManager)
+        public RolesController(RoleManager<Role> roleManager, UserManager<User> userManager)
         {
             _roleManager = roleManager;
             _userManager = userManager;
@@ -30,13 +30,50 @@ namespace Bicard.Controllers
                 if (!roleExists)
                 {
                     // If the role doesn't exist, you may want to create it
-                    return BadRequest("role doesn't exist");
+                    return BadRequest($"Role \"{roleName}\" not found.");
                 }
 
                 // Assign the user to the role
                 await _userManager.AddToRoleAsync(user, roleName);
             }
             return Ok();
+        }
+        [HttpPost("UnassignRole")]
+        public async Task<IActionResult> UnassignRole(string userName, string roleName)
+        {
+            var user = await _userManager.FindByNameAsync(userName);
+
+            if (user != null)
+            {
+                // Check if the user is already in the specified role
+                var isInRole = await _userManager.IsInRoleAsync(user, roleName);
+
+                if (isInRole)
+                {
+                    // Remove the user from the role
+                    var result = await _userManager.RemoveFromRoleAsync(user, roleName);
+
+                    if (result.Succeeded)
+                    {
+                        return Ok("User is unassigned from role");
+                    }
+                    else
+                    {
+                        return new ObjectResult(new { error = "Internal Server Error", message = "Can't unassign user from role" })
+                        {
+                            StatusCode = 500
+                        };
+                    }
+                }
+                else
+                {
+                    return BadRequest($"User is not in \"{roleName}\" role");
+                }
+            }
+            else
+            {
+                return NotFound($"User with name {userName} not found");
+            }
         }
         [HttpPost("CreateRole")]
         public async Task<IActionResult> CreateRole([FromBody] string roleName)
@@ -46,7 +83,7 @@ namespace Bicard.Controllers
                 return BadRequest("Role name cannot be empty");
             }
 
-            var role = new IdentityRole(roleName);
+            var role = new Role(roleName);
             var result = await _roleManager.CreateAsync(role);
 
             if (result.Succeeded)

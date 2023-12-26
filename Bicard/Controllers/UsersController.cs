@@ -9,11 +9,11 @@ using Bicard.Services;
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
 {
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly UserManager<User> _userManager;
+    private readonly SignInManager<User> _signInManager;
     private readonly IJwtService _jwtService;
 
-    public UsersController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IJwtService jwtService)
+    public UsersController(UserManager<User> userManager, SignInManager<User> signInManager, IJwtService jwtService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -23,7 +23,7 @@ public class UsersController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegistrationModel model)
     {
-        var user = new IdentityUser { UserName = model.UserName, Email = model.Email };
+        var user = new User { UserName = model.UserName, Email = model.Email };
         var result = await _userManager.CreateAsync(user, model.Password);
 
         if (result.Succeeded)
@@ -46,9 +46,14 @@ public class UsersController : ControllerBase
             // You may customize the response based on your needs
             var user = await _userManager.FindByNameAsync(model.UserName);
             var accessToken = _jwtService.GenerateAccessToken(user);
+            Response.Cookies.Append("Bicard-Web-API-Access-Token", accessToken.Result, new CookieOptions()
+            {
+                HttpOnly = true,
+                SameSite = SameSiteMode.Strict,
+                MaxAge = TimeSpan.FromSeconds(120)
+            });
             return Ok(new { 
-                Message = "Login successful",
-                AccessToken = accessToken.Result,
+                Message = "Login successful"
             });
         }
 

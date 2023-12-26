@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Bicard.Entities;
+using Microsoft.AspNetCore.Identity;
 
 namespace Bicard.Services
 {
     public interface IJwtService
     {
-        Task<string> GenerateAccessToken(IdentityUser user);
+        Task<string> GenerateAccessToken(User user);
     }
 }

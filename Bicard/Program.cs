@@ -8,6 +8,7 @@ using Bicard.Services;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
+using Bicard.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +18,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API Name", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Bicard API", Version = "v1" });
 
     // Define the security scheme
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -48,7 +49,7 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
+builder.Services.AddIdentity<User, Role>(options => {
         options.SignIn.RequireConfirmedAccount = false;
         options.User.RequireUniqueEmail = true;
         options.Password.RequireDigit = false;
@@ -57,7 +58,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
         options.Password.RequireUppercase = false;
         options.Password.RequireLowercase = false;
     })
-    .AddRoles<IdentityRole>()
+    .AddRoles<Role>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddAuthentication(options =>
     {
@@ -78,6 +79,14 @@ builder.Services.AddAuthentication(options =>
             RoleClaimType = ClaimTypes.Role, // Specify the RoleClaimType
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                context.Token = context.Request.Cookies["Bicard-Web-API-Access-Token"];
+                return Task.CompletedTask;
+            }
+        };
     });
 builder.Services.AddScoped<IJwtService, JwtService>();
 
@@ -91,12 +100,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Your API Name V1");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Bicard API V1");
         c.RoutePrefix = string.Empty; // Set the Swagger UI at the root of the application
     });
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
